@@ -2,7 +2,6 @@
 import type { Nullable } from '@antfu/utils'
 
 let text = $ref('')
-// let editText = $ref('')
 interface Item {
   idx: number
   content: string
@@ -16,14 +15,21 @@ const addTodo = () => {
   todos.push(text)
   text = ''
 }
+
 const updateTodo = () => {
-  if (editItem) {
-    todos[editItem.idx] = editItem.content
+  const editTextField = document.getElementById('editTextField')
+  if (editItem && editTextField) {
+    let editText = editTextField.innerText
+    if (editText[editText.length - 1] === '\n')
+      editText = editText.slice(0, -1)
+    todos[editItem.idx] = editText
     editItem = null
   }
 }
 const removeTodo = (idx: number) => {
   todos.splice(idx, 1)
+  if (editItem && editItem.idx === idx)
+    editItem = null
 }
 </script>
 
@@ -74,22 +80,25 @@ const removeTodo = (idx: number) => {
           {{ idx + 1 }}
         </div>
         <div class="w-4/6">
-          <div v-if="editItem && editItem.idx === idx">
-            <input
-              id="input"
-              v-model="editItem.content"
-              placeholder="What's on your mind?"
-              type="text"
-              autocomplete="false"
-              p="x-4 y-2"
-              text="center"
-              bg="transparent"
-              border=" b-1"
-              outline="none active:none"
+          <div
+            v-if="editItem && editItem.idx === idx"
+            border="~ rounded transparent"
+            hover="border-b-dark dark:border-b-white"
+          >
+            <div
+              id="editTextField"
+              ref="editTest"
+              h-max
+              p-2
+              outline-none
+              rounded
+              contenteditable="true"
               @keydown.enter="updateTodo"
             >
+              {{ editItem.content }}
+            </div>
           </div>
-          <div v-else @click="editItem = { idx, content: i }">
+          <div v-else break-all @click="editItem = { idx, content: i }">
             {{ i }}
           </div>
         </div>
