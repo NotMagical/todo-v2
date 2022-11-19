@@ -1,21 +1,26 @@
 <script setup lang="ts">
+import type { Nullable } from '@antfu/utils'
+
 let text = $ref('')
-let editText = $ref('')
+// let editText = $ref('')
+interface Item {
+  idx: number
+  content: string
+}
+let editItem: Nullable<Item> = $ref(null)
 const todos: string[] = $ref([])
 
-// const router = useRouter()
 const addTodo = () => {
   if (!text)
     return
-
   todos.push(text)
   text = ''
-  // if (text)
-  //   router.push(`/hi/${encodeURIComponent(text)}`)
 }
-const updateTodo = (idx: number) => {
-  todos[idx] = editText
-  editText = ''
+const updateTodo = () => {
+  if (editItem) {
+    todos[editItem.idx] = editItem.content
+    editItem = null
+  }
 }
 const removeTodo = (idx: number) => {
   todos.splice(idx, 1)
@@ -68,29 +73,28 @@ const removeTodo = (idx: number) => {
         <div>
           {{ idx + 1 }}
         </div>
-        <div class="w-5/6">
-          <div v-if="!editText.length" @click="editText = i">
-            {{ i }}
-          </div>
-          <div v-else>
+        <div class="w-4/6">
+          <div v-if="editItem && editItem.idx === idx">
             <input
               id="input"
-              v-model="editText"
+              v-model="editItem.content"
               placeholder="What's on your mind?"
               type="text"
               autocomplete="false"
               p="x-4 y-2"
-              w="250px"
               text="center"
               bg="transparent"
-              border=" bottom"
+              border=" b-1"
               outline="none active:none"
-              @keydown.enter="updateTodo(idx)"
+              @keydown.enter="updateTodo"
             >
+          </div>
+          <div v-else @click="editItem = { idx, content: i }">
+            {{ i }}
           </div>
         </div>
         <div class="flex flex-row items-center gap-5">
-          <div v-if="editText.length" class="i-carbon-edit bg-green cursor-pointer hover:bg-green-700" @click="updateTodo(idx)" />
+          <div v-if="editItem && editItem.idx === idx" class="i-carbon-edit bg-green cursor-pointer hover:bg-green-700" @click="updateTodo" />
           <div class="i-carbon:trash-can bg-red cursor-pointer hover:bg-red-700" @click="removeTodo(idx)" />
         </div>
       </div>
