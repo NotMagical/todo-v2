@@ -1,36 +1,37 @@
 <script setup lang="ts">
 import type { Nullable } from '@antfu/utils'
+import { v4 as uuidv4 } from 'uuid'
 
 let text = $ref('')
 interface Item {
-  idx: number
+  id: string
   content: string
+  completed: boolean
 }
 let editItem: Nullable<Item> = $ref(null)
 let todoHeader = $ref('Todos')
-const todos: string[] = $ref([])
+const todos: Item[] = $ref([])
 
 const addTodo = () => {
   if (!text)
     return
-  todos.push(text)
+  todos.push({ id: uuidv4(), content: text, completed: false })
   text = ''
 }
 
-const updateTodo = () => {
+const updateTodo = (idx: number) => {
   const editTextField = document.getElementById('editTextField')
   if (editItem && editTextField) {
     let editText = editTextField.innerText
     if (editText[editText.length - 1] === '\n')
       editText = editText.slice(0, -1)
-    todos[editItem.idx] = editText
+    todos[idx].content = editText
     editItem = null
   }
 }
 const removeTodo = (idx: number) => {
   todos.splice(idx, 1)
-  if (editItem && editItem.idx === idx)
-    editItem = null
+  editItem = null
 }
 const updateTodoHeader = () => {
   const headerField = document.getElementById('headerEditField')
@@ -99,13 +100,16 @@ const updateTodoHeader = () => {
         <div
           v-for="(i, idx) in todos" :key="idx"
           class=" dark:bg-gray-800 flex flex-row gap-x-5 border border-color-gray-800 dark:border-color-gray-700 py-sm rounded my-xs px-sm justify-center items-center"
+          :class="i.completed ? 'opacity-40' : undefined"
+          hover="bg-gray-100 dark:bg-gray-7"
         >
-          <div>
+          <div class="flex flex-row items-center gap-2">
+            <div hover=" bg-green i-carbon:checkmark-filled" :class="i.completed ? 'i-carbon:checkmark-filled bg-green' : 'i-carbon:checkmark'" @click="i.completed = !i.completed" />
             {{ idx + 1 }}
           </div>
           <div class="w-4/6">
             <div
-              v-if="editItem && editItem.idx === idx"
+              v-if="editItem && editItem.id === i.id"
               border="~ rounded transparent"
               hover="border-b-dark dark:border-b-white"
             >
@@ -117,17 +121,17 @@ const updateTodoHeader = () => {
                 outline-none
                 rounded
                 contenteditable="true"
-                @keydown.enter="updateTodo"
+                @keydown.enter="updateTodo(idx)"
               >
                 {{ editItem.content }}
               </div>
             </div>
-            <div v-else break-all @click="editItem = { idx, content: i }">
-              {{ i }}
+            <div v-else :class="i.completed ? 'line-through' : undefined" break-all @click="editItem = i">
+              {{ i.content }}
             </div>
           </div>
           <div class="flex flex-row items-center gap-5">
-            <div v-if="editItem && editItem.idx === idx" class="i-carbon-edit bg-green-700 cursor-pointer hover:bg-green" @click="updateTodo" />
+            <div v-if="editItem && editItem.id === i.id" class="i-carbon-edit bg-green-700 cursor-pointer hover:bg-green" @click="updateTodo(idx)" />
             <div class="i-carbon:trash-can bg-red-700 cursor-pointer hover:bg-red" @click="removeTodo(idx)" />
           </div>
         </div>
